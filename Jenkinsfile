@@ -55,9 +55,9 @@ pipeline {
                 script {
                     // Determine deployment strategy based on project type
                     if (fileExists('docker-compose.yml')) {
-                        sh 'docker-compose up -d --build'
+                        sh 'docker compose up -d --build'
                     } else if (fileExists('docker-compose.dev.yml')) {
-                        sh 'docker-compose -f docker-compose.dev.yml up -d --build'
+                        sh 'docker compose -f docker-compose.dev.yml up -d --build'
                     } else if (fileExists('ecosystem.config.js')) {
                         sh 'pm2 reload ecosystem.config.js --env production'
                     } else {
