@@ -55,6 +55,8 @@ pipeline {
                 script {
                     // Determine deployment strategy based on project type
                     if (fileExists('docker-compose.yml')) {
+                        // Ensure external network exists
+                        sh 'docker network create tea-network || true'
                         sh 'docker compose up -d --build'
                     } else if (fileExists('docker-compose.dev.yml')) {
                         sh 'docker compose -f docker-compose.dev.yml up -d --build'
