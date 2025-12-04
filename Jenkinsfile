@@ -50,20 +50,35 @@ pipeline {
             }
         }
 
+        stage('Docker Build') {
+            steps {
+                script {
+                    def appName = 'bienestar-app'
+                    def imageTag = "${appName}:${env.BUILD_NUMBER}"
+                    
+                    // Build locally
+                    sh "docker build -t ${imageTag} ."
+                    
+                    // Tag as latest
+                    sh "docker tag ${imageTag} ${appName}:latest"
+                }
+            }
+        }
+
         stage('Deploy') {
             steps {
                 script {
-                    // Determine deployment strategy based on project type
+                    // Ensure external network exists
+                    sh 'docker network create tea-network || true'
+                    
                     if (fileExists('docker-compose.yml')) {
-                        // Ensure external network exists
-                        sh 'docker network create tea-network || true'
+                        // Deploy using local image
                         sh 'docker compose up -d --build'
-                    } else if (fileExists('docker-compose.dev.yml')) {
-                        sh 'docker compose -f docker-compose.dev.yml up -d --build'
-                    } else if (fileExists('ecosystem.config.js')) {
-                        sh 'pm2 reload ecosystem.config.js --env production'
+                        
+                        // Prune old images to save space
+                        sh 'docker image prune -f'
                     } else {
-                        echo 'No deployment strategy found (no docker-compose.yml or ecosystem.config.js)'
+                        error 'docker-compose.yml not found'
                     }
                 }
             }
