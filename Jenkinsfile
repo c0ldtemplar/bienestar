@@ -55,9 +55,6 @@ pipeline {
         }
 
         stage('Approval for Production') {
-            when {
-                branch 'main'
-            }
             steps {
                 timeout(time: 1, unit: 'HOURS') {
                     input message: "Desplegar Bienestar a Producción?", ok: '🚀 Deploy'
@@ -66,9 +63,6 @@ pipeline {
         }
         
         stage('Deploy to Production') {
-            when {
-                branch 'main'
-            }
             steps {
                 script {
                     echo "🐳 Reconstruyendo contenedor ${SERVICE_NAME}..."
