@@ -21,7 +21,16 @@ pipeline {
     stages {
         stage('Clean Workspace') {
             steps {
-                cleanWs()
+                script {
+                    // TRUCO PRO: Usamos un contenedor Alpine efímero para borrar archivos.
+                    // Como Docker corre como root, él SÍ puede borrar los archivos creados por otros contenedores.
+                    try {
+                        sh 'docker run --rm -v $(pwd):/app -w /app alpine rm -rf ./* || true'
+                    } catch (Exception e) {
+                        echo "⚠️ Falló la limpieza vía Docker, intentando método estándar..."
+                    }
+                    cleanWs()
+                }
             }
         }
 
@@ -59,11 +68,22 @@ pipeline {
                 script {
                     echo "🐳 Reconstruyendo contenedor ${SERVICE_NAME}..."
                     dir(INFRA_ROOT) {
+                        // Limpieza previa: detener y eliminar contenedor existente
+                        sh """
+                            docker stop ${SERVICE_NAME} || true
+                            docker rm ${SERVICE_NAME} || true
+                        """
+                        
                         // Despliegue específico para bienestar-app
                         // --no-deps evita reiniciar bases de datos u otros servicios
                         sh """
                             docker compose -f docker-compose.ecosystem.yml up -d --no-deps --build --force-recreate ${SERVICE_NAME}
+                        """
+                        
+                        // Limpieza de imágenes huérfanas y sin usar
+                        sh """
                             docker image prune -f
+                            docker system prune -f --volumes || true
                         """
                     }
                 }
@@ -91,6 +111,10 @@ pipeline {
     }
     
     post {
+        always {
+            // Limpieza del workspace de Jenkins
+            cleanWs()
+        }
         failure {
             echo '❌ El despliegue de Bienestar falló.'
         }
