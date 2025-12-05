@@ -53,14 +53,6 @@ pipeline {
                 }
             }
         }
-
-        stage('Approval for Production') {
-            steps {
-                timeout(time: 1, unit: 'HOURS') {
-                    input message: "Desplegar Bienestar a Producción?", ok: '🚀 Deploy'
-                }
-            }
-        }
         
         stage('Deploy to Production') {
             steps {
