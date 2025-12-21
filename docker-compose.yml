@@ -2,7 +2,12 @@ services:
   bienestar-app:
     build: .
     container_name: bienestar-app
-    restart: always
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
     ports:
       - "3014:3000"
     environment:
