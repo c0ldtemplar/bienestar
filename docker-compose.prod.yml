@@ -1,0 +1,22 @@
+services:
+  web:
+    image: coldtemplar478/bienestar-app:${IMAGE_TAG:-latest}
+    container_name: bienestar-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      - NODE_ENV=production
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    networks:
+      - rocalian-net
+
+networks:
+  rocalian-net:
+    external: true
